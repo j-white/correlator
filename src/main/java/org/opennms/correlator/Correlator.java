@@ -1,4 +1,4 @@
-package org.opennms.sparker;
+package org.opennms.correlator;
 
 import java.io.File;
 
@@ -7,7 +7,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 
-public class Sparker {
+public class Correlator {
 	
 	public static class FunctionA implements Function<String, Boolean> {
 		private static final long serialVersionUID = 29833457434818700L;

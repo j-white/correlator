@@ -1,4 +1,4 @@
-package org.opennms.correlator;
+package org.opennms.correlator.spark;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,9 +9,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.opennms.correlator.Correlator;
+import org.opennms.correlator.spark.SparkLineCounter;
 
-public class CorrelatorTest {
+public class SparkLineCounterTest {
 
 	@Rule
 	public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -24,7 +24,7 @@ public class CorrelatorTest {
 		FileUtils.writeStringToFile(f, "a\nb\n");
 		assertEquals(s, FileUtils.readFileToString(f));
 
-		Correlator sparker = new Correlator();
+		SparkLineCounter sparker = new SparkLineCounter();
 		assertEquals(2, sparker.getNumLines(f));
 	}
 }

@@ -1,4 +1,4 @@
-package org.opennms.correlator;
+package org.opennms.correlator.spark;
 
 import java.io.File;
 
@@ -7,30 +7,28 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 
-public class Correlator {
+public class SparkLineCounter {
 	
-	public static class FunctionA implements Function<String, Boolean> {
+	public static class CountLinesContaining implements Function<String, Boolean> {
 		private static final long serialVersionUID = 29833457434818700L;
 
-		public Boolean call(String s) {
-			return s.contains("a");
+		private final String m_substring;
+		
+		public CountLinesContaining(String substring) {
+			m_substring = substring;
 		}
-	}
-	
-	public static class FunctionB implements Function<String, Boolean> {
-		private static final long serialVersionUID = 1858481264346052827L;
-
+		
 		public Boolean call(String s) {
-			return s.contains("b");
+			return s.contains(m_substring);
 		}
 	}
 	
 	public long getNumLines(File f) {
 		String logFile = f.toURI().toString();
-		String targetJar = new File("target/sparker-0.0.1-SNAPSHOT.jar").getAbsolutePath();
+		String targetJar = new File("target/correlator-1.0.0-SNAPSHOT.jar").getAbsolutePath();
 
 		System.out.println("Using log file: "  + logFile);
-	    SparkConf conf = new SparkConf().setAppName("Simple Application")
+	    SparkConf conf = new SparkConf().setAppName("Correlator")
 	    		.setMaster("spark://noise:7077")
 	    		.setJars(new String[] {
 	    				targetJar
@@ -38,9 +36,9 @@ public class Correlator {
 	    JavaSparkContext sc = new JavaSparkContext(conf);
 	    JavaRDD<String> logData = sc.textFile(logFile).cache();
 	
-	    long numAs = logData.filter(new FunctionA()).count();
+	    long numAs = logData.filter(new CountLinesContaining("a")).count();
 	
-	    long numBs = logData.filter(new FunctionB()).count();
+	    long numBs = logData.filter(new CountLinesContaining("b")).count();
 
 	    sc.close();
 	    return numAs + numBs;

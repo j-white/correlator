@@ -10,7 +10,10 @@ public interface MetricCorrelator {
 	 * the given metric over the given range.
 	 *
 	 * All available metrics are searched.
+	 *
+	 * The returned collection is sorted, starting
+	 * with the metric that correlates the most.
 	 */
-	public Collection<Metric> correlator(Metric metric, Date from, Date top, int topN);  
+	public Collection<Metric> correlate(Metric metric, Date from, Date to, long resolution, int topN);  
 	
 }

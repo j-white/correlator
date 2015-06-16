@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.cassandraunit.CassandraCQLUnit;
 import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
@@ -24,7 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({
@@ -60,19 +63,20 @@ public class NewtsMetricCorrelatorTest {
 				{6, 5},
 				{7, 5},
 				{8, 5},
+				{9, 5},
 				{9, 5}
 		};
 
 		long valuesB[][] = new long[][] {
-				{0, 0},
+				{0, 1},
 				{1, 0},
-				{2, 0},
+				{2, 1},
 				{3, 0},
-				{4, 0},
+				{4, 1},
 				{5, 0},
-				{6, 0},
+				{6, 1},
 				{7, 0},
-				{8, 0},
+				{8, 1},
 				{9, 0}
 		};
 
@@ -92,15 +96,21 @@ public class NewtsMetricCorrelatorTest {
 		long valuesD[][] = new long[][] {
 				{0, 0},
 				{1, 0},
-				{2, 0},
+				{2, 1},
 				{3, 0},
 				{4, 0},
-				{5, 0},
+				{5, 1},
 				{6, 0},
 				{7, 0},
-				{8, 0},
+				{8, 1},
 				{9, 0}
 		};
+
+		long values[][] = new long[100][2];
+		for (int i = 0; i < 100; i++) {
+		    values[i][0] = i;
+		    values[i][1] = 100;
+		}
 
 		m_sampleRepository.insert(toSamples("a", "m1", valuesA));
 		m_sampleRepository.insert(toSamples("a", "m2", valuesB));
@@ -116,18 +126,21 @@ public class NewtsMetricCorrelatorTest {
 
 		// Verify
 		assertEquals(1, correlatedMetrics.size());
-		assertEquals(new Metric("a", "m3"), correlatedMetrics.iterator().next());
+		assertEquals(new Metric("a", "m2"), correlatedMetrics.iterator().next());
 	}
 
 	private static List<Sample> toSamples(String resourceId, String metricName, long[][] values) {
-		Resource resource = new Resource(resourceId);
+	    Map<String, String> attributes = Maps.newHashMap();
+	    // Tag all metrics
+	    attributes.put("metric", "true");
+	    Resource resource = new Resource(resourceId, Optional.of(attributes));
 		MetricType type = MetricType.GAUGE;
 
 		List<Sample> samples = Lists.newArrayList();
 		for (int i = 0; i < values.length; i++) {
-			samples.add(new Sample(Timestamp.fromEpochSeconds(values[i][1]),
+			samples.add(new Sample(Timestamp.fromEpochMillis(values[i][0]),
 					resource, metricName, type,
-					new Gauge(values[i][0])));
+					new Gauge(values[i][1])));
 		}
 
 		return samples;

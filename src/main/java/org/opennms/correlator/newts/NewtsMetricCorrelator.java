@@ -22,6 +22,7 @@ import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.query.ResultDescriptor;
 import org.opennms.newts.api.query.StandardAggregationFunctions;
 import org.opennms.newts.api.search.Query;
+import org.opennms.newts.api.search.SearchResults;
 import org.opennms.newts.api.search.Searcher;
 import org.opennms.newts.api.search.Term;
 import org.opennms.newts.api.search.TermQuery;
@@ -73,20 +74,23 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 			i++;
 		}
 
-		LOG.info("MOO2: x: {}, y: {}", Arrays.toString(x), Arrays.toString(y));
-		return pc.correlation(x, y);
+		double coeff = pc.correlation(x, y);
+		LOG.debug("x: {}, y: {} coeff: {}", Arrays.toString(x), Arrays.toString(y), coeff);
+		return coeff;
 	}
 
 	private List<Metric> getAllMetrics() {
-		Query q = new TermQuery(new Term("_parent0", ""));
-		m_searcher.search(q);
-
-		return Lists.newArrayList(
-			new Metric("a", "m1"),
-			new Metric("a", "m2"),
-			new Metric("a", "m3"),
-			new Metric("a", "m4")
-		);
+	    List<Metric> metrics = Lists.newLinkedList();
+	    Query q = new TermQuery(new Term("metric", "true"));
+	    SearchResults results = m_searcher.search(q);
+	    for (SearchResults.Result result : results) {
+	        String resourceId = result.getResource().getId();
+	        for (String metric : result.getMetrics()) {
+	            metrics.add(new Metric(resourceId, metric));
+	        }
+	        result.getMetrics();
+	    }
+	    return metrics;
 	}
 
 	private static class MetricWithCoeff implements Comparable<MetricWithCoeff> {
@@ -102,10 +106,6 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 			return m_metric;
 		}
 
-		@Override
-		public int compareTo(MetricWithCoeff other) {
-			return Double.valueOf(m_coeff).compareTo(Double.valueOf(other.m_coeff));
-		}
 
 		@Override
 		public String toString() {
@@ -114,46 +114,52 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 		       .add("coeff", m_coeff)
 		       .toString();
 		}
+
+        public int compareTo(MetricWithCoeff other) {
+            return Double.valueOf(other.m_coeff).compareTo(m_coeff);
+        }
 	}
 
 	public Collection<Metric> correlate(Metric metric,
 			Date from, Date to, long resolution,
 			int topN) {
 		
+	    int durationMultiplier = 3;
 		Resource resource = new Resource(metric.getResource());
 		Timestamp start = Timestamp.fromDate(from);
 		Timestamp end = Timestamp.fromDate(to);
 
+		// Retrieve the measurements for our first metric
 		ResultDescriptor descriptor = new ResultDescriptor();
 		descriptor.step(resolution);
 		descriptor.datasource(metric.getMetric(), StandardAggregationFunctions.AVERAGE);
 		descriptor.export(metric.getMetric());
+		Results<Measurement> measurementsForMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(durationMultiplier * resolution));
 
-		Results<Measurement> measurementsForMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(2 * resolution));
-
+		// Iterate over all of the other metrics
 		List<MetricWithCoeff> metricsWithCoeffs = Lists.newArrayList();
 		for (Metric otherMetric : getAllMetrics()) {
 			if (metric.equals(otherMetric)) {
 				continue;
 			}
 
+			// Retrieve the measurements
 			resource = new Resource(otherMetric.getResource());
 			descriptor = new ResultDescriptor();
 			descriptor.step(resolution);
 			descriptor.datasource(otherMetric.getMetric(), StandardAggregationFunctions.AVERAGE);
 			descriptor.export(otherMetric.getMetric());
+			Results<Measurement> measurementsForOtherMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(durationMultiplier * resolution));
 
-			Results<Measurement> measurementsForOtherMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(2 * resolution));
-
+			// Perform the correlation
 			double correlationCoefficient = correlate(metric.getMetric(), otherMetric.getMetric(), measurementsForMetric, measurementsForOtherMetric);
-			LOG.info("MOO3: Correlation returned {}", correlationCoefficient);
-			
+
+			// Store the results
 			MetricWithCoeff metricWithCoeff = new MetricWithCoeff(otherMetric, correlationCoefficient);
 			metricsWithCoeffs.add(metricWithCoeff);
-
-			LOG.info("MOO1: {} - {}", metric, metricWithCoeff);
 		}
 
+		// Select the Top N metrics
 		Collections.sort(metricsWithCoeffs);
 		return metricsWithCoeffs.subList(0, Math.min(topN, metricsWithCoeffs.size())).stream()
 			.map(m -> m.getMetric())

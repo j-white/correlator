@@ -21,13 +21,21 @@ public class SparkMetricCorrelatorTest extends AbstractCorrelatorTest {
 
     private static final String TARGET_JAR = new File("target/correlator-1.0.0-SNAPSHOT.jar").getAbsolutePath();
 
+    private SparkSampleReader m_sampleReader;
+
     private SparkMetricCorrelator m_correlator;
 
     @Before
     public void setUp() {
         String sparkMasterUrl = "local";
-        //String hostname = InetAddress.getLocalHost().getHostName();
-        //sparkMasterUrl = new SparkLineCounter("spark://" + hostname + ":7077", "newts");
+        /*String hostname;
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            throw Throwables.propagate(e);
+        }
+        String sparkMasterUrl = "spark://" + hostname + ":7077";
+        */
 
         SparkConf conf = new SparkConf().setAppName(APP_NAME)
                 .setMaster(sparkMasterUrl)
@@ -44,7 +52,8 @@ public class SparkMetricCorrelatorTest extends AbstractCorrelatorTest {
                 });
 
         JavaSparkContext sc = new JavaSparkContext(conf);
-        m_correlator = new SparkMetricCorrelator(sc, "newts");
+        m_sampleReader = new SparkSampleReader(sc, "newts");
+        m_correlator = new SparkMetricCorrelator(m_sampleReader);
         super.setUp();
     }
 

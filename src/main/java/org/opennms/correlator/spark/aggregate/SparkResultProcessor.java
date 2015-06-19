@@ -7,7 +7,6 @@ import java.util.Iterator;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.opennms.newts.aggregate.Aggregation;
-import org.opennms.newts.aggregate.Compute;
 import org.opennms.newts.aggregate.PrimaryData;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
@@ -47,15 +46,16 @@ public class SparkResultProcessor {
         Iterator<Row<Sample>> it = rates.collect().iterator();
         PrimaryData primaryData = new PrimaryData(m_resource, m_start.minus(m_resolution), m_end, m_resultDescriptor, it);
         Aggregation aggregation = new Aggregation(m_resource, m_start, m_end, m_resultDescriptor, m_resolution, primaryData);
-        Compute compute = new Compute(m_resultDescriptor, aggregation);
-
         // Current JVM -> Spark (slow)
-        Results<Measurement> measurements = new Results<Measurement>();
-        for (Row<Measurement> row : compute) {
-            measurements.addRow(row);
+        Results<Measurement> theMeasurements = new Results<Measurement>();
+        for (Row<Measurement> row : aggregation) {
+            theMeasurements.addRow(row);
         }
-        JavaRDD<Row<Measurement>> allMeasurements = m_context.parallelize(Lists.newLinkedList(measurements.getRows()));
 
-        return Export.export(allMeasurements, m_resultDescriptor.getExports());
+        JavaRDD<Row<Measurement>> measurements =  m_context.parallelize(Lists.newLinkedList(theMeasurements.getRows()));
+        JavaRDD<Row<Measurement>> computedMeasurements = Compute.compute(measurements, m_resultDescriptor);
+        JavaRDD<Row<Measurement>> exportedMeasurements = Export.export(computedMeasurements, m_resultDescriptor.getExports());
+
+        return exportedMeasurements;
     }
 }

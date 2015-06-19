@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.opennms.correlator.spark.Utils.SampleRDDRowsBuilder;
 import org.opennms.correlator.spark.Utils.MeasurementRDDRowsBuilder;
 import org.opennms.correlator.spark.aggregate.SparkResultProcessor;
+import org.opennms.correlator.spark.aggregate.Sum;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
 import org.opennms.newts.api.MetricType;
@@ -21,7 +22,6 @@ import org.opennms.newts.api.Sample;
 import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.Results.Row;
 import org.opennms.newts.api.query.ResultDescriptor;
-import org.opennms.newts.api.query.ResultDescriptor.BinaryFunction;
 
 public class SparkResultProcessorTest {
 
@@ -40,7 +40,7 @@ public class SparkResultProcessorTest {
         } catch (UnknownHostException e) {
             throw Throwables.propagate(e);
         }
-        String sparkMasterUrl = "spark://" + hostname + ":7077";*/
+        sparkMasterUrl = "spark://" + hostname + ":7077";*/
 
         SparkConf conf = new SparkConf().setAppName(APP_NAME)
                 .setMaster(sparkMasterUrl)
@@ -90,19 +90,10 @@ public class SparkResultProcessorTest {
                 .row(900007200).element("m0", 75000).element("m1", 75000)      // Thu Jul  9 13:00:00 CDT 1998
                 .build();
 
-        // Function to add two values
-        BinaryFunction sum = new BinaryFunction() {
-
-            @Override
-            public double apply(double a, double b) {
-                return a + b;
-            }
-        };
-
         ResultDescriptor rDescriptor = new ResultDescriptor(Duration.seconds(300))
                 .datasource("m0", AVERAGE)
                 .datasource("m1", AVERAGE)
-                .calculate("total", sum, "m0", "m1")
+                .calculate("total", new Sum(), "m0", "m1")
                 .export("total");
 
         JavaRDD<Row<Measurement>> expected = new MeasurementRDDRowsBuilder(context, new Resource("localhost"))

@@ -1,4 +1,4 @@
-package org.opennms.correlator.newts;
+package org.opennms.correlator.spark;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,13 +39,12 @@ import com.google.common.collect.Maps;
 @ContextConfiguration({
 	"classpath:/applicationContext-newts.xml"
 })
-public class NewtsMetricCorrelatorTest {
+public class SparkMetricCorrelatorTest {
 
     @ClassRule
     public static CassandraCQLUnit cassandraUnit = new CassandraCQLUnit(new ClassPathCQLDataSet("cql/dataset.cql","newts"));
 
-	@Autowired
-	private NewtsMetricCorrelator m_correlator;
+    private SparkMetricCorrelator m_correlator;
 
 	@Autowired
 	private SampleRepository m_sampleRepository;
@@ -54,9 +53,11 @@ public class NewtsMetricCorrelatorTest {
     private Searcher m_searcher;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception {
 		assertNotNull(m_sampleRepository);
-		assertNotNull(m_correlator);
+		m_correlator = new SparkMetricCorrelator("local", "newts");
+        //String hostname = InetAddress.getLocalHost().getHostName();
+        //m_correlator = new SparkLineCounter("spark://" + hostname + ":7077", "newts");
 	}
 
 	@Test
@@ -154,7 +155,7 @@ public class NewtsMetricCorrelatorTest {
 
 		return samples;
 	}
-
+	
     private List<Metric> getAllMetrics() {
         List<Metric> metrics = Lists.newLinkedList();
         Query q = new TermQuery(new Term("metric", "true"));

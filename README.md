@@ -2,9 +2,9 @@
 
 ## About
 
-Prototype used to perform correlation on time series stored in [Newts](http://newts.io).
+Prototype used to perform correlation on time series stored in [Newts](http://newts.io) using [Spark](https://spark.apache.org).
 
-## Setup Spark
+## Setting up Spark
 
 Download and build:
  
@@ -18,5 +18,5 @@ Start the master and a slave:
     ./sbin/start-master.sh
     ./sbin/start-slave.sh spark://$HOSTNAME:7077
 
-You should now be able to access http://127.0.0.1:8080/, make sure you have a worker registered.
+You should now be able to access http://127.0.0.1:8080/. Make sure you have a worker registered.
 

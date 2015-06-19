@@ -82,7 +82,6 @@ public class SparkMetricCorrelator implements MetricCorrelator {
 
         JavaRDD<Row<Measurement>> measurementsForPrimaryMetric = measurementsByResource.get(metric.getResource());
         JavaDoubleRDD seriesForPrimaryMetric = measurementsForPrimaryMetric.mapToDouble(new MapMeasurementToDouble(metric.getMetric()));
-
         // Iterate over all of the candidate metrics
         List<MetricWithCoeff> metricsWithCoeffs = Lists.newArrayList();
         for (Metric candidate : candidates) {

@@ -9,11 +9,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.opennms.correlator.spark.functions.CassandraRowsToSampleRows;
 import org.opennms.correlator.spark.functions.MapRowToTimestamp;
 import org.opennms.newts.aggregate.IntervalGenerator;
-import org.opennms.newts.aggregate.ResultProcessor;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
 import org.opennms.newts.api.Resource;
-import org.opennms.newts.api.Results;
 import org.opennms.newts.api.Sample;
 import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.Results.Row;
@@ -26,11 +24,10 @@ import com.datastax.spark.connector.japi.SparkContextJavaFunctions;
 import com.datastax.spark.connector.japi.rdd.CassandraJavaRDD;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /**
- * Similar functionality as the {@link CassandraSampleRepository}, but
- * implement using Spark.
+ * Implements the select() functions from {@link CassandraSampleRepository}
+ * using Spark.
  *
  * @author jwhite
  */
@@ -54,16 +51,20 @@ public class SparkSampleReader {
     }
 
     public JavaRDD<Row<Sample>> select(Resource resource, Optional<Timestamp> start, Optional<Timestamp> end) {
-        Timestamp lower = start.get().stepFloor(resourceShard);
-        Timestamp upper = end.get().stepFloor(resourceShard);
+
+        Timestamp upper = end.isPresent() ? end.get() : Timestamp.now();
+        Timestamp lower = start.isPresent() ? start.get() : upper.minus(Duration.seconds(86400));
+
+        Timestamp lowerShard = upper.stepFloor(resourceShard);
+        Timestamp upperShard = lower.stepFloor(resourceShard);
 
         // Combine the rows from the all the partitions
         CassandraJavaRDD<CassandraRow> samples = m_cassandraContextFunctions.cassandraTable(m_keyspace, SchemaConstants.T_SAMPLES);
         JavaRDD<CassandraRow> rows = null;
-        for (Timestamp partition : new IntervalGenerator(lower, upper, resourceShard)) {
+        for (Timestamp partition : new IntervalGenerator(lowerShard, upperShard, resourceShard)) {
             JavaRDD<CassandraRow> nextRows = samples.select(SchemaConstants.F_METRIC_NAME, SchemaConstants.F_VALUE, SchemaConstants.F_ATTRIBUTES, SchemaConstants.F_COLLECTED)
                     .where("partition = ? AND resource = ? AND collected_at >= ? AND collected_at <= ?",
-                            (int) partition.asSeconds(), resource.getId(), start.get().asDate(), end.get().asDate());
+                            (int) partition.asSeconds(), resource.getId(), lower.asDate(), upper.asDate());
             if (rows == null) {
                 rows = nextRows;
             } else {
@@ -84,13 +85,12 @@ public class SparkSampleReader {
     public JavaRDD<Row<Measurement>> select(Resource resource,
             Optional<Timestamp> start, Optional<Timestamp> end,
             ResultDescriptor descriptor, Duration resolution) {
-        JavaRDD<Row<Sample>> sampleRows = select(resource, start, end);
 
-        // Spark -> Current JVM (slow)
-        // Calculate the measurements
-        Results<Measurement> results = new ResultProcessor(resource, start.get(), end.get(), descriptor, resolution).process(sampleRows.collect().iterator());
+        Timestamp upper = end.isPresent() ? end.get() : Timestamp.now();
+        Timestamp lower = start.isPresent() ? start.get() : upper.minus(Duration.seconds(86400));
 
-        // Current JVM -> Spark (slow)
-        return m_context.parallelize(Lists.newLinkedList(results.getRows()));
+        // Grab and process the samples
+        JavaRDD<Row<Sample>> sampleRows = select(resource, Optional.of(lower), Optional.of(upper));
+        return new SparkResultProcessor(m_context, resource, lower, upper, descriptor, resolution).process(sampleRows);
     }
 }

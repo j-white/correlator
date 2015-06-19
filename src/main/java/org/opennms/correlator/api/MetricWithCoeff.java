@@ -5,7 +5,7 @@ import com.google.common.base.Objects;
 public class MetricWithCoeff implements Comparable<MetricWithCoeff> {
     private final Metric m_metric;
     private final double m_coeff;
-    
+
     public MetricWithCoeff(Metric metric, double coeff) {
         m_metric = metric;
         m_coeff = coeff;
@@ -14,7 +14,6 @@ public class MetricWithCoeff implements Comparable<MetricWithCoeff> {
     public Metric getMetric() {
         return m_metric;
     }
-
 
     @Override
     public String toString() {

@@ -1,172 +1,55 @@
 package org.opennms.correlator.spark;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.io.File;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.cassandraunit.CassandraCQLUnit;
-import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.opennms.correlator.api.Metric;
-import org.opennms.correlator.api.MetricWithCoeff;
-import org.opennms.newts.api.Gauge;
-import org.opennms.newts.api.MetricType;
-import org.opennms.newts.api.Resource;
-import org.opennms.newts.api.Sample;
-import org.opennms.newts.api.SampleRepository;
-import org.opennms.newts.api.Timestamp;
-import org.opennms.newts.api.search.Query;
-import org.opennms.newts.api.search.SearchResults;
-import org.opennms.newts.api.search.Searcher;
-import org.opennms.newts.api.search.Term;
-import org.opennms.newts.api.search.TermQuery;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.opennms.correlator.api.MetricCorrelator;
+import org.opennms.correlator.newts.AbstractCorrelatorTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({
-	"classpath:/applicationContext-newts.xml"
+    "classpath:/applicationContext-newts.xml"
 })
-public class SparkMetricCorrelatorTest {
+public class SparkMetricCorrelatorTest extends AbstractCorrelatorTest {
 
-    @ClassRule
-    public static CassandraCQLUnit cassandraUnit = new CassandraCQLUnit(new ClassPathCQLDataSet("cql/dataset.cql","newts"));
+    private static final String APP_NAME = "Correlator";
+
+    private static final String TARGET_JAR = new File("target/correlator-1.0.0-SNAPSHOT.jar").getAbsolutePath();
 
     private SparkMetricCorrelator m_correlator;
 
-	@Autowired
-	private SampleRepository m_sampleRepository;
-
-    @Autowired
-    private Searcher m_searcher;
-
-	@Before
-	public void setUp() throws Exception {
-		assertNotNull(m_sampleRepository);
-		m_correlator = new SparkMetricCorrelator("local", "newts");
+    @Before
+    public void setUp() {
+        String sparkMasterUrl = "local";
         //String hostname = InetAddress.getLocalHost().getHostName();
-        //m_correlator = new SparkLineCounter("spark://" + hostname + ":7077", "newts");
-	}
+        //sparkMasterUrl = new SparkLineCounter("spark://" + hostname + ":7077", "newts");
 
-	@Test
-	public void canCorrelate() {
-		// Define and insert samples
-		long valuesA[][] = new long[][] {
-				{0, 5},
-				{1, 5},
-				{2, 5},
-				{3, 5},
-				{4, 5},
-				{5, 5},
-				{6, 5},
-				{7, 5},
-				{8, 5},
-				{9, 5},
-				{9, 5}
-		};
+        SparkConf conf = new SparkConf().setAppName(APP_NAME)
+                .setMaster(sparkMasterUrl)
+                .set("spark.cassandra.connection.host", "localhost")
+                .set("spark.cassandra.connection.port", "9142")
+                .setJars(new String[] {
+                        TARGET_JAR,
+                        "/home/jesse/.m2/repository/com/datastax/spark/spark-cassandra-connector_2.10/1.4.0-M1/spark-cassandra-connector_2.10-1.4.0-M1.jar",
+                        "/home/jesse/.m2/repository/com/datastax/spark/spark-cassandra-connector-java_2.10/1.4.0-M1/spark-cassandra-connector-java_2.10-1.4.0-M1.jar",
+                        "/home/jesse/.m2/repository/com/datastax/cassandra/cassandra-driver-core/2.1.5/cassandra-driver-core-2.1.5.jar",
+                        "/home/jesse/.m2/repository/com/google/guava/guava/18.0/guava-18.0.jar",
+                        "/home/jesse/.m2/repository/joda-time/joda-time/2.3/joda-time-2.3.jar",
+                        "/home/jesse/.m2/repository/org/opennms/newts/newts-api/1.2.1-SNAPSHOT/newts-api-1.2.1-SNAPSHOT.jar"
+                });
 
-		long valuesB[][] = new long[][] {
-				{0, 1},
-				{1, 0},
-				{2, 1},
-				{3, 0},
-				{4, 1},
-				{5, 0},
-				{6, 1},
-				{7, 0},
-				{8, 1},
-				{9, 0}
-		};
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        m_correlator = new SparkMetricCorrelator(sc, "newts");
+        super.setUp();
+    }
 
-		long valuesC[][] = new long[][] {
-				{0, 0},
-				{1, 1},
-				{2, 2},
-				{3, 3},
-				{4, 4},
-				{5, 5},
-				{6, 6},
-				{7, 7},
-				{8, 8},
-				{9, 9}
-		};
-
-		long valuesD[][] = new long[][] {
-				{0, 0},
-				{1, 0},
-				{2, 1},
-				{3, 0},
-				{4, 0},
-				{5, 1},
-				{6, 0},
-				{7, 0},
-				{8, 1},
-				{9, 0}
-		};
-
-		long values[][] = new long[100][2];
-		for (int i = 0; i < 100; i++) {
-		    values[i][0] = i;
-		    values[i][1] = 100;
-		}
-
-		m_sampleRepository.insert(toSamples("a", "m1", valuesA));
-		m_sampleRepository.insert(toSamples("a", "m2", valuesB));
-		m_sampleRepository.insert(toSamples("a", "m3", valuesC));
-		m_sampleRepository.insert(toSamples("a", "m4", valuesD));
-
-		// Correlate
-		Metric metric = new Metric("a", "m1");
-		Date from = new Date(0);
-		Date to = new Date(10);
-		long resolution = 1;
-		Collection<MetricWithCoeff> correlatedMetrics = m_correlator.correlate(metric, getAllMetrics(), from, to, resolution, 1);
-
-		// Verify
-		assertEquals(1, correlatedMetrics.size());
-		assertEquals(new Metric("a", "m2"), correlatedMetrics.iterator().next().getMetric());
-	}
-
-	private static List<Sample> toSamples(String resourceId, String metricName, long[][] values) {
-	    Map<String, String> attributes = Maps.newHashMap();
-	    // Tag all metrics
-	    attributes.put("metric", "true");
-	    Resource resource = new Resource(resourceId, Optional.of(attributes));
-		MetricType type = MetricType.GAUGE;
-
-		List<Sample> samples = Lists.newArrayList();
-		for (int i = 0; i < values.length; i++) {
-			samples.add(new Sample(Timestamp.fromEpochMillis(values[i][0]),
-					resource, metricName, type,
-					new Gauge(values[i][1])));
-		}
-
-		return samples;
-	}
-	
-    private List<Metric> getAllMetrics() {
-        List<Metric> metrics = Lists.newLinkedList();
-        Query q = new TermQuery(new Term("metric", "true"));
-        SearchResults results = m_searcher.search(q);
-        for (SearchResults.Result result : results) {
-            String resourceId = result.getResource().getId();
-            for (String metric : result.getMetrics()) {
-                metrics.add(new Metric(resourceId, metric));
-            }
-            result.getMetrics();
-        }
-        return metrics;
+    @Override
+    public MetricCorrelator getCorrelator() {
+        return m_correlator;
     }
 }

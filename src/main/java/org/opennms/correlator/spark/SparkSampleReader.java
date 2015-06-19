@@ -6,6 +6,7 @@ import javax.inject.Named;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.opennms.correlator.spark.aggregate.SparkResultProcessor;
 import org.opennms.correlator.spark.functions.CassandraRowsToSampleRows;
 import org.opennms.correlator.spark.functions.MapRowToTimestamp;
 import org.opennms.newts.aggregate.IntervalGenerator;

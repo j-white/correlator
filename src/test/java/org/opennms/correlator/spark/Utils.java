@@ -83,7 +83,7 @@ class Utils {
         abstract AbstractRDDRowsBuilder<T> element(String name, double value, Map<String, String> attrs);
 
         JavaRDD<Row<T>> build() {
-            return m_context.parallelize(Lists.newLinkedList(m_results));
+            return m_context.parallelize(m_results, m_results.size());
         }
 
     }

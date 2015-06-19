@@ -8,7 +8,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.opennms.newts.aggregate.Aggregation;
 import org.opennms.newts.aggregate.Compute;
-import org.opennms.newts.aggregate.Export;
 import org.opennms.newts.aggregate.PrimaryData;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
@@ -45,25 +44,18 @@ public class SparkResultProcessor {
         JavaRDD<Row<Sample>> rates = Rate.rate(samples, m_resultDescriptor.getSourceNames());
 
         // Spark -> Current JVM (slow)
-        Results<Measurement> results = processSlow(rates.collect().iterator());
-        // Current JVM -> Spark (slow)
-        return m_context.parallelize(Lists.newLinkedList(results.getRows()));
-    }
-
-    private Results<Measurement> processSlow(Iterator<Row<Sample>> samples) {
-        // Build chain of iterators to process results as a stream
-        //Rate rate = new Rate(samples, m_resultDescriptor.getSourceNames());
-        PrimaryData primaryData = new PrimaryData(m_resource, m_start.minus(m_resolution), m_end, m_resultDescriptor, samples);
+        Iterator<Row<Sample>> it = rates.collect().iterator();
+        PrimaryData primaryData = new PrimaryData(m_resource, m_start.minus(m_resolution), m_end, m_resultDescriptor, it);
         Aggregation aggregation = new Aggregation(m_resource, m_start, m_end, m_resultDescriptor, m_resolution, primaryData);
         Compute compute = new Compute(m_resultDescriptor, aggregation);
-        Export exports = new Export(m_resultDescriptor.getExports(), compute);
 
+        // Current JVM -> Spark (slow)
         Results<Measurement> measurements = new Results<Measurement>();
-
-        for (Row<Measurement> row : exports) {
+        for (Row<Measurement> row : compute) {
             measurements.addRow(row);
         }
+        JavaRDD<Row<Measurement>> allMeasurements = m_context.parallelize(Lists.newLinkedList(measurements.getRows()));
 
-        return measurements;
+        return Export.export(allMeasurements, m_resultDescriptor.getExports());
     }
 }

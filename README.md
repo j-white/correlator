@@ -4,6 +4,8 @@
 
 Prototype used to perform correlation on time series stored in [Newts](http://newts.io) using [Spark](https://spark.apache.org).
 
+The goal is to be able to perform sample selection and aggregation using the Cassandra connector and Spark's RDDs.
+
 ## Setting up Spark
 
 Download and build:

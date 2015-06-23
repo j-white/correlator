@@ -7,7 +7,6 @@ import java.util.Iterator;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.opennms.newts.aggregate.Aggregation;
-import org.opennms.newts.aggregate.PrimaryData;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
 import org.opennms.newts.api.Resource;
@@ -41,11 +40,17 @@ public class SparkResultProcessor {
         checkNotNull(samples, "samples argument");
 
         JavaRDD<Row<Sample>> rates = Rate.rate(samples, m_resultDescriptor.getSourceNames());
+        JavaRDD<Row<Measurement>> primaryData = PrimaryData.primaryData(m_context, rates, m_resource, m_start, m_end, m_resultDescriptor);
 
+        Iterator<Row<Measurement>> it = primaryData.collect().iterator();
+        Aggregation aggregation = new Aggregation(m_resource, m_start, m_end, m_resultDescriptor, m_resolution, it);
+
+        /*
         // Spark -> Current JVM (slow)
         Iterator<Row<Sample>> it = rates.collect().iterator();
         PrimaryData primaryData = new PrimaryData(m_resource, m_start.minus(m_resolution), m_end, m_resultDescriptor, it);
         Aggregation aggregation = new Aggregation(m_resource, m_start, m_end, m_resultDescriptor, m_resolution, primaryData);
+        */
         // Current JVM -> Spark (slow)
         Results<Measurement> theMeasurements = new Results<Measurement>();
         for (Row<Measurement> row : aggregation) {

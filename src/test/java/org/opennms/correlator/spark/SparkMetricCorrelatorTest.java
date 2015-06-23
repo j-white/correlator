@@ -1,6 +1,8 @@
 package org.opennms.correlator.spark;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -10,6 +12,8 @@ import org.opennms.correlator.api.MetricCorrelator;
 import org.opennms.correlator.newts.AbstractCorrelatorTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.base.Throwables;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({
@@ -28,14 +32,13 @@ public class SparkMetricCorrelatorTest extends AbstractCorrelatorTest {
     @Before
     public void setUp() {
         String sparkMasterUrl = "local";
-        /*String hostname;
+        String hostname;
         try {
             hostname = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
             throw Throwables.propagate(e);
         }
-        String sparkMasterUrl = "spark://" + hostname + ":7077";
-        */
+        sparkMasterUrl = "spark://" + hostname + ":7077";
 
         SparkConf conf = new SparkConf().setAppName(APP_NAME)
                 .setMaster(sparkMasterUrl)
@@ -48,7 +51,8 @@ public class SparkMetricCorrelatorTest extends AbstractCorrelatorTest {
                         "/home/jesse/.m2/repository/com/datastax/cassandra/cassandra-driver-core/2.1.5/cassandra-driver-core-2.1.5.jar",
                         "/home/jesse/.m2/repository/com/google/guava/guava/18.0/guava-18.0.jar",
                         "/home/jesse/.m2/repository/joda-time/joda-time/2.3/joda-time-2.3.jar",
-                        "/home/jesse/.m2/repository/org/opennms/newts/newts-api/1.2.1-SNAPSHOT/newts-api-1.2.1-SNAPSHOT.jar"
+                        "/home/jesse/.m2/repository/org/opennms/newts/newts-api/1.2.1-SNAPSHOT/newts-api-1.2.1-SNAPSHOT.jar",
+                        "/home/jesse/.m2/repository/org/opennms/newts/newts-aggregate/1.2.1-SNAPSHOT/newts-aggregate-1.2.1-SNAPSHOT.jar"
                 });
 
         JavaSparkContext sc = new JavaSparkContext(conf);

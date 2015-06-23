@@ -20,8 +20,8 @@ import org.opennms.newts.api.Results.Row;
 import org.opennms.newts.api.query.Datasource;
 import org.opennms.newts.api.query.ResultDescriptor;
 
-import com.clearspring.analytics.util.Lists;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
@@ -93,6 +93,10 @@ public class Aggregation {
             Map<String, Map<String, String>> aggregatedAttrs = Maps.newHashMap();
 
             for (Row<Measurement> row : rows) {
+                if (row == null) {
+                    continue;
+                }
+
                 for (Datasource ds : m_descriptor.getDatasources().values()) {
                     Measurement metric = row.getElement(ds.getSource());
                     values.put(ds.getLabel(), metric != null ? metric.getValue() : Double.NaN);
@@ -128,7 +132,19 @@ public class Aggregation {
         Duration interval = resultDescriptor.getInterval();
         checkArgument(resolution.isMultiple(interval), "resolution must be a multiple of interval");
 
+        // Map
         JavaPairRDD<Timestamp, Tuple2<Timestamp, Row<Measurement>>> rowsByInterval = primaryData.mapToPair(new MapRowToInterval(start, end, resolution));
+        
+        // Make sure we have at least one row for every interval
+        List<Tuple2<Timestamp, Tuple2<Timestamp, Row<Measurement>>>> generatedTimestamps = Lists.newLinkedList();
+        for (Timestamp ts: new IntervalGenerator(start.stepFloor(resolution), end.stepCeiling(resolution), resolution)) {
+            Tuple2<Timestamp, Tuple2<Timestamp, Row<Measurement>>> entry = new Tuple2<>(ts, new Tuple2<Timestamp, Row<Measurement>>(ts, null));
+            generatedTimestamps.add(entry);
+        }
+        JavaPairRDD<Timestamp, Tuple2<Timestamp, Row<Measurement>>> allIntervals = context.parallelizePairs(generatedTimestamps);
+        rowsByInterval = rowsByInterval.union(allIntervals);
+
+        // Reduce
         return rowsByInterval.sortByKey().groupByKey().values().map(new Mapper(resource, resolution, resultDescriptor));
     }
 }

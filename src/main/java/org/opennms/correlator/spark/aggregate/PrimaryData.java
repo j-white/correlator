@@ -3,6 +3,7 @@ package org.opennms.correlator.spark.aggregate;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -12,17 +13,19 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.opennms.newts.aggregate.IntervalGenerator;
-import org.opennms.newts.aggregate.PrimaryData.Accumulation;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
+import org.opennms.newts.api.MetricType;
 import org.opennms.newts.api.Resource;
 import org.opennms.newts.api.Timestamp;
+import org.opennms.newts.api.ValueType;
 import org.opennms.newts.api.Results.Row;
 import org.opennms.newts.api.Sample;
 import org.opennms.newts.api.query.Datasource;
 import org.opennms.newts.api.query.ResultDescriptor;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import scala.Tuple2;
 
@@ -37,6 +40,63 @@ import scala.Tuple2;
  */
 public class PrimaryData {
 
+    private static class Accumulation {
+        private long m_known, m_unknown;
+        private ValueType<?> m_value;
+        private Map<String, String> m_attributes = Maps.newHashMap();
+
+        private Accumulation() {
+            reset();
+        }
+
+        private Accumulation accumulateValue(Duration elapsed, Duration heartbeat, ValueType<?> value) {
+            if (elapsed.lt(heartbeat)) {
+                m_known += elapsed.asMillis();
+                m_value = m_value.plus(value.times(elapsed.asMillis()));
+            }
+            else {
+                m_unknown += elapsed.asMillis();
+            }
+            return this;
+        }
+
+        private Accumulation accumlateAttrs(Map<String, String> attributes) {
+            if (attributes != null) m_attributes.putAll(attributes);
+            return this;
+        }
+
+        private Double getAverage() {
+            return isValid() ? m_value.divideBy(m_known).doubleValue() : Double.NaN;
+        }
+
+        private long getKnown() {
+            return m_known;
+        }
+
+        private long getUnknown() {
+            return m_unknown;
+        }
+
+        private double getElapsed() {
+            return getKnown() + getUnknown();
+        }
+
+        private boolean isValid() {
+            return getUnknown() < (getElapsed() / 2);
+        }
+
+        private void reset() {
+            m_known = m_unknown = 0;
+            m_value = ValueType.compose(0, MetricType.GAUGE);
+            m_attributes = Maps.newHashMap();
+        }
+
+        private Map<String, String> getAttributes() {
+            return m_attributes;
+        }
+
+    }
+    
     public static class MapRowToNeighboringIntervals implements PairFlatMapFunction<Row<Sample>, Timestamp, Tuple2<Timestamp, Row<Sample>>> {
         private static final long serialVersionUID = 3645855694043360899L;
 
@@ -158,7 +218,7 @@ public class PrimaryData {
                 }
 
                 // Calculate durations
-                Accumulation accumulation = new org.opennms.newts.aggregate.PrimaryData.Accumulation();
+                Accumulation accumulation = new Accumulation();
                 Sample lastSample = null;
                 for (Sample sample : samples) {
                     Duration elapsed = null;

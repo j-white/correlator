@@ -12,6 +12,8 @@
 
 	<modules>
 		<module>core</module>
+		<module>rest</module>
+		<module>assembly</module>
 	</modules>
 
 	<properties>
@@ -23,6 +25,7 @@
 		<scala.version>2.10</scala.version>
 		<cassandraunit.version>2.1.3.1</cassandraunit.version>
 		<spark.cassandra.version>1.4.0-M1</spark.cassandra.version>
+		<dropwizard.version>0.9.0-rc1</dropwizard.version>
 	</properties>
 
 	<build>

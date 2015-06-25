@@ -111,6 +111,14 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 
 		// Select the Top N metrics
 		Collections.sort(metricsWithCoeffs);
-		return metricsWithCoeffs.subList(0, topN);
+		return metricsWithCoeffs.subList(0, Math.min(metricsWithCoeffs.size(), topN));
+	}
+
+	public void setSampleRepository(SampleRepository sampleRepository) {
+	    m_sampleRepository = sampleRepository;
+	}
+
+	public SampleRepository getSampleRepository() {
+	    return m_sampleRepository;
 	}
 }

@@ -1,8 +1,11 @@
 package org.opennms.correlator.api;
 
+import java.io.Serializable;
+
 import com.google.common.base.Objects;
 
-public class MetricWithCoeff implements Comparable<MetricWithCoeff> {
+public class MetricWithCoeff implements Comparable<MetricWithCoeff>, Serializable {
+    private static final long serialVersionUID = 1115045583691907741L;
     private final Metric m_metric;
     private final double m_coeff;
 
@@ -13,6 +16,10 @@ public class MetricWithCoeff implements Comparable<MetricWithCoeff> {
 
     public Metric getMetric() {
         return m_metric;
+    }
+
+    public double getCoeff() {
+        return m_coeff;
     }
 
     @Override

@@ -11,9 +11,11 @@
 	<name>Correlator</name>
 
 	<modules>
+		<module>api</module>
 		<module>core</module>
 		<module>rest</module>
-		<module>assembly</module>
+		<module>karaf</module>
+		<module>wrap</module>
 	</modules>
 
 	<properties>

@@ -9,61 +9,56 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>correlator-core</artifactId>
 	<name>Correlator :: Core</name>
+	<packaging>bundle</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.5.4</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+					    <Import-Package>org.opennms.correlator.api;org.slf4j;org.opennms.newts.api*;org.opennms.newts.persistence.cassandra*;com.google.common*;org.apache.spark*;org.apache.commons.math3*</Import-Package>
+						<Export-Package>org.opennms.correlator.newts</Export-Package>
+						<!-- Embed all compile and runtime scope dependencies, except those that are poms or have artifactIds in the given list 
+						<Embed-Dependency>*;scope=compile|runtime;type=!pom;inline=false;artifactId=!correlator-api|newts-api|newts-cassandra|newts-aggregate|newts-cassandra-common|guava</Embed-Dependency>
+						<Embed-Transitive>true</Embed-Transitive>-->
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.opennms.correlator</groupId>
+			<artifactId>correlator-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.opennms.correlator.wrap</groupId>
+			<artifactId>spark</artifactId>
+			<version>${project.version}</version>
+			<type>pom</type>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
 			<version>${spring.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>${spring.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_${scala.version}</artifactId>
-			<version>${spark.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-mllib_${scala.version}</artifactId>
-			<version>${spark.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.datastax.spark</groupId>
-			<artifactId>spark-cassandra-connector_${scala.version}</artifactId>
-			<version>${spark.cassandra.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.datastax.spark</groupId>
-			<artifactId>spark-cassandra-connector-java_${scala.version}</artifactId>
-			<version>${spark.cassandra.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.opennms.newts</groupId>
+			<artifactId>newts-api</artifactId>
+			<version>${newts.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opennms.newts</groupId>
@@ -74,11 +69,13 @@
 			<groupId>org.opennms.newts</groupId>
 			<artifactId>newts-cassandra-search</artifactId>
 			<version>${newts.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<version>${log4j.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -89,6 +86,11 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<version>${log4j.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-math3</artifactId>
+		    <version>3.5</version>
 		</dependency>
 
 		<!-- Testing -->

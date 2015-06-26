@@ -21,7 +21,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-					    <Import-Package>javax.inject*;resolution:=optional,*</Import-Package>
+						<Import-Package>javax.inject*;resolution:=optional,*</Import-Package>
 						<Export-Package>org.opennms.correlator.spark</Export-Package>
 					</instructions>
 				</configuration>
@@ -36,21 +36,44 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.opennms.correlator.wrap</groupId>
-			<artifactId>spark</artifactId>
+			<groupId>org.opennms.correlator.spark</groupId>
+			<artifactId>correlator-spark-deps</artifactId>
 			<version>${project.version}</version>
 			<type>pom</type>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.opennms.newts</groupId>
 			<artifactId>newts-aggregate</artifactId>
 			<version>${newts.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.12</version>
-        </dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.spark</groupId>
+			<artifactId>spark-cassandra-connector_${scala.version}</artifactId>
+			<version>${spark.cassandra.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.spark</groupId>
+			<artifactId>spark-cassandra-connector-java_${scala.version}</artifactId>
+			<version>${spark.cassandra.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<!-- Testing -->
 		<dependency>

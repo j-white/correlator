@@ -17,6 +17,7 @@
   <modules>
       <module>api</module>
       <module>lib</module>
+      <module>deps</module>
       <module>app</module>
   </modules>
 </project>

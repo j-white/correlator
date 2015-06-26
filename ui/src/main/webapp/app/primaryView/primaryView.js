@@ -135,10 +135,13 @@ angular.module('myApp.primaryView', ['ngRoute'])
             metrics.push({
               resource: rrdGraphAttribute.rrdFile,
               metric: rrdGraphAttribute.name,
-              id: decodeURIComponent(resource.id)
+              id: decodeURIComponent(resource.id),
+              key: rrdGraphAttribute.rrdFile + ":" + rrdGraphAttribute.name
             });
           });
         });
+
+        //metrics = _.sortBy(metrics, 'key');
         deferred.resolve(metrics);
       }).error(function(err) {
         $scope.status = "Failed to retrieve the list of metrics: " + err;

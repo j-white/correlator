@@ -45,7 +45,11 @@ Setting up your container:
     feature:install war
     bundle:install -s "webbundle:mvn:org.opennms.correlator/correlator-ui/1.0.0-SNAPSHOT/war?Bundle-SymbolicName=correlator-ui&Web-ContextPath=/correlator"
 
-You can now access the REST service via:
+You can now access the UI via:
+
+    http://localhost:8181/correlator/app/index.html
+
+Or access the REST service via:
 
     http://localhost:8181/cxf/karafsimple/correlator/correlate?resource=snmp%3Afs%3ANODES%3Any-cassandra-3%3Amib2-tcp&metric=tcpCurrEstab&resolution=36000000
 

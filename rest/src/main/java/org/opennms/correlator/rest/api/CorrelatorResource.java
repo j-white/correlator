@@ -12,6 +12,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.cxf.rs.security.cors.CrossOriginResourceSharing;
+
+@CrossOriginResourceSharing(
+    allowAllOrigins = true,
+    allowCredentials = true
+)
 @Path("/correlator")
 @Produces(MediaType.APPLICATION_JSON)
 public interface CorrelatorResource {

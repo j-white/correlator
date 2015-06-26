@@ -18,6 +18,8 @@ import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.Results.Row;
 import org.opennms.newts.api.query.ResultDescriptor;
 import org.opennms.newts.persistence.cassandra.SchemaConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.spark.connector.japi.CassandraJavaUtil;
 import com.datastax.spark.connector.japi.CassandraRow;
@@ -33,6 +35,8 @@ import com.google.common.base.Preconditions;
  * @author jwhite
  */
 public class SparkSampleReader {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SparkSampleReader.class);
 
     private final JavaSparkContext m_context;
 
@@ -71,6 +75,10 @@ public class SparkSampleReader {
             } else {
                 rows = rows.union(nextRows);
             }
+        }
+        
+        if (rows == null) {
+            throw new IllegalArgumentException(String.format("No partitions found between: %s and %s", lowerShard, upperShard));
         }
 
         // Group the rows by timestamp

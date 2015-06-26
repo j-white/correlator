@@ -1,4 +1,4 @@
-package org.opennms.correlator.spark;
+package org.opennms.correlator.spark.impl;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class SparkMetricCorrelator implements MetricCorrelator {
+public class SparkCorrelator implements MetricCorrelator {
 
     private static final String CORRELATION_TYPE = "pearson";
 
@@ -40,7 +40,7 @@ public class SparkMetricCorrelator implements MetricCorrelator {
     private final SparkSampleReader m_sparkSampleReader;
 
     @Inject
-    public SparkMetricCorrelator(SparkSampleReader sparkSampleReader) {
+    public SparkCorrelator(SparkSampleReader sparkSampleReader) {
         m_sparkSampleReader = sparkSampleReader;
     }
 

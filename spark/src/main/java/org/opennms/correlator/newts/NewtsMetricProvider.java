@@ -21,6 +21,15 @@ public class NewtsMetricProvider implements MetricProvider {
 
     @Override
     public List<Metric> getAllMetrics() {
+        return Lists.newArrayList(
+                new Metric("snmp:fs:NODES:ny-cassandra-3:mib2-tcp", "tcpActiveOpens"),
+                new Metric("snmp:fs:NODES:ny-cassandra-3:mib2-tcp", "tcpCurrEstab"),
+                new Metric("snmp:fs:NODES:ny-cassandra-3:ucd-loadavg", "loadavg1"),
+                new Metric("snmp:fs:NODES:ny-cassandra-3:ucd-loadavg", "loadavg5"),
+                new Metric("snmp:fs:NODES:ny-cassandra-3:ucd-loadavg", "loadavg15")
+                );
+
+        /*
         LOG.info("Searching for metrics...");
         SearchResults searchResults = m_searcher.search(QueryBuilder.matchAnyValue("response", "snmp"));
         LOG.info("Found {} metrics", searchResults.size());
@@ -33,6 +42,7 @@ public class NewtsMetricProvider implements MetricProvider {
             }
         }
         return metrics;
+        */
     }
 
     public void setSearcher(Searcher searcher) {

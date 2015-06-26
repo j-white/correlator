@@ -13,6 +13,7 @@
 	<modules>
 		<module>api</module>
 		<module>newts</module>
+		<module>spark</module>
 		<module>rest</module>
 		<module>karaf</module>
 		<module>wrap</module>

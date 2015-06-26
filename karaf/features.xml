@@ -18,7 +18,8 @@
       <feature>correlator-core</feature>
       <feature>cxf-core</feature>
       <feature>cxf-jaxrs</feature>
-      <bundle>mvn:org.apache.cxf/cxf-rt-rs-security-cors/2.6.1</bundle>
+      <feature>cxf-rs-security-cors</feature>
+      <!-- <bundle>mvn:org.apache.cxf/cxf-rt-rs-security-cors/3.1.1</bundle> -->
       <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
       <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
       <bundle>mvn:org.codehaus.jackson/jackson-jaxrs/1.9.13</bundle>

@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.opennms.correlator.api.Metric;
 import org.opennms.correlator.api.MetricCorrelator;
 import org.opennms.correlator.api.MetricWithCoeff;
@@ -26,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 /**
  * Correlation using the Newts API. 
@@ -35,12 +36,16 @@ import com.google.common.collect.Lists;
  */
 public class NewtsMetricCorrelator implements MetricCorrelator {
 
+    private static final int DURATION_MULTIPLIER = 3;
+
 	private static final Logger LOG = LoggerFactory.getLogger(NewtsMetricCorrelator.class);
 
 	@Inject
 	private SampleRepository m_sampleRepository;
 
 	private PearsonsCorrelation pc = new PearsonsCorrelation();	
+	
+	private SpearmansCorrelation sc = new SpearmansCorrelation();
 
 	public double correlate(String name1, String name2, Results<Measurement> results1, Results<Measurement> results2) {
 		Preconditions.checkArgument(results1.getRows().size() == results2.getRows().size());
@@ -65,6 +70,8 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 			i++;
 		}
 
+		// TODO: Ignore series that are close to [0,0,0,0,0...0] if this series is not
+		
 		double coeff = pc.correlation(x, y);
 		LOG.debug("x: {}, y: {} coeff: {}", Arrays.toString(x), Arrays.toString(y), coeff);
 		return coeff;
@@ -74,7 +81,6 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 			Date from, Date to, long resolution,
 			int topN) {
 
-	    int durationMultiplier = 3;
 		Resource resource = new Resource(metric.getResource());
 		Timestamp start = Timestamp.fromDate(from);
 		Timestamp end = Timestamp.fromDate(to);
@@ -84,34 +90,32 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 		descriptor.step(resolution);
 		descriptor.datasource(metric.getMetric(), StandardAggregationFunctions.AVERAGE);
 		descriptor.export(metric.getMetric());
-		Results<Measurement> measurementsForMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(durationMultiplier * resolution));
+		Results<Measurement> measurementsForMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(DURATION_MULTIPLIER * resolution));
 
-		// Iterate over all of the other metrics
-		List<MetricWithCoeff> metricsWithCoeffs = Lists.newArrayList();
-		for (Metric candidate : candidates) {
-			if (metric.equals(candidate)) {
-				continue;
-			}
-
-			// Retrieve the measurements
-			resource = new Resource(candidate.getResource());
-			descriptor = new ResultDescriptor();
-			descriptor.step(resolution);
-			descriptor.datasource(candidate.getMetric(), StandardAggregationFunctions.AVERAGE);
-			descriptor.export(candidate.getMetric());
-			Results<Measurement> measurementsForOtherMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(durationMultiplier * resolution));
-
-			// Perform the correlation
-			double correlationCoefficient = correlate(metric.getMetric(), candidate.getMetric(), measurementsForMetric, measurementsForOtherMetric);
-
-			// Store the results
-			MetricWithCoeff metricWithCoeff = new MetricWithCoeff(candidate, correlationCoefficient);
-			metricsWithCoeffs.add(metricWithCoeff);
-		}
+		// Calculate the coefficients in parallel
+		List<MetricWithCoeff> metricsWithCoeffs = candidates.parallelStream()
+		    .filter(c -> !metric.equals(c)) // don't correlate the metric with itself
+		    .map(c -> correlate(metric, c, measurementsForMetric, start, end, resolution))
+		    .filter(r -> !Double.isNaN(r.getCoeff())) // skip results that are NaN
+		    .collect(Collectors.toList());
 
 		// Select the Top N metrics
 		Collections.sort(metricsWithCoeffs);
 		return metricsWithCoeffs.subList(0, Math.min(metricsWithCoeffs.size(), topN));
+	}
+	
+	private MetricWithCoeff correlate(Metric target, Metric candidate, Results<Measurement> targetMeasurements, Timestamp start, Timestamp end, long resolution) {
+	    // Retrieve the measurements
+	    Resource resource = new Resource(candidate.getResource());
+	    ResultDescriptor descriptor = new ResultDescriptor();
+        descriptor.step(resolution);
+        descriptor.datasource(candidate.getMetric(), StandardAggregationFunctions.AVERAGE);
+        descriptor.export(candidate.getMetric());
+        Results<Measurement> measurementsForOtherMetric = m_sampleRepository.select(resource, Optional.of(start), Optional.of(end), descriptor, Duration.millis(DURATION_MULTIPLIER * resolution));
+
+        // Perform the correlation
+        double correlationCoefficient = correlate(target.getMetric(), candidate.getMetric(), targetMeasurements, measurementsForOtherMetric);
+        return new MetricWithCoeff(candidate, correlationCoefficient);
 	}
 
 	public void setSampleRepository(SampleRepository sampleRepository) {

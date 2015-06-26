@@ -113,6 +113,20 @@ public abstract class AbstractCorrelatorTest {
                 {9, 0}
         };
 
+        // Add a series whose values are identically 0
+        long valuesE[][] = new long[][] {
+                {0, 0},
+                {1, 0},
+                {2, 0},
+                {3, 0},
+                {4, 0},
+                {5, 0},
+                {6, 0},
+                {7, 0},
+                {8, 0},
+                {9, 0}
+        };
+
         long values[][] = new long[100][2];
         for (int i = 0; i < 100; i++) {
             values[i][0] = i;
@@ -123,6 +137,7 @@ public abstract class AbstractCorrelatorTest {
         m_sampleRepository.insert(toSamples("a", "m2", valuesB));
         m_sampleRepository.insert(toSamples("a", "m3", valuesC));
         m_sampleRepository.insert(toSamples("a", "m4", valuesD));
+        m_sampleRepository.insert(toSamples("a", "m5", valuesE));
 
         // Correlate
         Metric metric = new Metric("a", "m1");

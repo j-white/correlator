@@ -31,6 +31,6 @@ public class MetricWithCoeff implements Comparable<MetricWithCoeff>, Serializabl
     }
 
     public int compareTo(MetricWithCoeff other) {
-        return Double.valueOf(other.m_coeff).compareTo(m_coeff);
+        return Double.valueOf(Math.abs(other.m_coeff)).compareTo(Math.abs(m_coeff));
     }
 }

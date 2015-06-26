@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
-import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.opennms.correlator.api.Metric;
 import org.opennms.correlator.api.MetricCorrelator;
 import org.opennms.correlator.api.MetricWithCoeff;
@@ -44,8 +43,6 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 	private SampleRepository m_sampleRepository;
 
 	private PearsonsCorrelation pc = new PearsonsCorrelation();	
-	
-	private SpearmansCorrelation sc = new SpearmansCorrelation();
 
 	public double correlate(String name1, String name2, Results<Measurement> results1, Results<Measurement> results2) {
 		Preconditions.checkArgument(results1.getRows().size() == results2.getRows().size());
@@ -70,10 +67,9 @@ public class NewtsMetricCorrelator implements MetricCorrelator {
 			i++;
 		}
 
-		// TODO: Ignore series that are close to [0,0,0,0,0...0] if this series is not
-		
 		double coeff = pc.correlation(x, y);
-		LOG.debug("x: {}, y: {} coeff: {}", Arrays.toString(x), Arrays.toString(y), coeff);
+
+		LOG.debug("x: {}, y: {} coeff: {}", Arrays.toString(x), Arrays.toString(y));
 		return coeff;
 	}
 

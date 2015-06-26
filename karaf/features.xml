@@ -7,15 +7,15 @@
       <bundle>mvn:org.opennms.correlator/correlator-api/1.0.0-SNAPSHOT</bundle>
     </feature>
 
-    <feature name="correlator-core" description="Correlator Core" version="1.0.0-SNAPSHOT">
+    <feature name="correlator-newts" description="Correlator Newts" version="1.0.0-SNAPSHOT">
       <feature>correlator-api</feature>
       <bundle>mvn:org.apache.commons/commons-math3/3.5</bundle>
       <bundle>mvn:org.opennms.correlator.wrap/spark/1.0.0-SNAPSHOT</bundle>
-      <bundle>mvn:org.opennms.correlator/correlator-core/1.0.0-SNAPSHOT</bundle>
+      <bundle>mvn:org.opennms.correlator/correlator-newts/1.0.0-SNAPSHOT</bundle>
     </feature>
 
     <feature name="correlator-rest" description="Correlator ReST" version="1.0.0-SNAPSHOT">
-      <feature>correlator-core</feature>
+      <feature>correlator-newts</feature>
       <feature>cxf-core</feature>
       <feature>cxf-jaxrs</feature>
       <feature>cxf-rs-security-cors</feature>

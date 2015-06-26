@@ -12,7 +12,7 @@
 
 	<modules>
 		<module>api</module>
-		<module>core</module>
+		<module>newts</module>
 		<module>rest</module>
 		<module>karaf</module>
 		<module>wrap</module>

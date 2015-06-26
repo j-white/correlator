@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.opennms.correlator.api.MetricCorrelator;
 import org.opennms.correlator.newts.AbstractCorrelatorTest;
+import org.opennms.correlator.spark.impl.SparkSampleReader;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

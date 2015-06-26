@@ -20,11 +20,8 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-					    <Import-Package>org.opennms.correlator.api;org.slf4j;org.opennms.newts.api*;org.opennms.newts.persistence.cassandra*;com.google.common*;org.apache.spark*;org.apache.commons.math3*</Import-Package>
-						<Export-Package>org.opennms.correlator.newts</Export-Package>
-						<!-- Embed all compile and runtime scope dependencies, except those that are poms or have artifactIds in the given list 
-						<Embed-Dependency>*;scope=compile|runtime;type=!pom;inline=false;artifactId=!correlator-api|newts-api|newts-cassandra|newts-aggregate|newts-cassandra-common|guava</Embed-Dependency>
-						<Embed-Transitive>true</Embed-Transitive>-->
+					    <Import-Package>javax.inject*;resolution:=optional,*</Import-Package>
+						<Export-Package>org.opennms.correlator.spark</Export-Package>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -44,54 +41,15 @@
 			<type>pom</type>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<version>${spring.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>${spring.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.opennms.newts</groupId>
-			<artifactId>newts-api</artifactId>
+			<artifactId>newts-aggregate</artifactId>
 			<version>${newts.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.opennms.newts</groupId>
-			<artifactId>newts-cassandra</artifactId>
-			<version>${newts.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.opennms.newts</groupId>
-			<artifactId>newts-cassandra-search</artifactId>
-			<version>${newts.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>${log4j.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-math3</artifactId>
-		    <version>3.5</version>
-		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+        </dependency>
 
 		<!-- Testing -->
 		<dependency>
@@ -126,6 +84,47 @@
 			<groupId>org.cassandraunit</groupId>
 			<artifactId>cassandra-unit-spring</artifactId>
 			<version>${cassandraunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.opennms.newts</groupId>
+			<artifactId>newts-cassandra</artifactId>
+			<version>${newts.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.opennms.newts</groupId>
+			<artifactId>newts-cassandra-search</artifactId>
+			<version>${newts.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>${log4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>${log4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

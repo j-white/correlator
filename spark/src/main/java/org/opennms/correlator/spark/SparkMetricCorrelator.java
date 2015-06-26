@@ -16,6 +16,7 @@ import org.opennms.correlator.api.Metric;
 import org.opennms.correlator.api.MetricCorrelator;
 import org.opennms.correlator.api.MetricWithCoeff;
 import org.opennms.correlator.spark.functions.MapMeasurementToDouble;
+import org.opennms.correlator.spark.impl.SparkSampleReader;
 import org.opennms.newts.api.Duration;
 import org.opennms.newts.api.Measurement;
 import org.opennms.newts.api.Resource;

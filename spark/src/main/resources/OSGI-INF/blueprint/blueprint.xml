@@ -12,20 +12,16 @@
       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
 ">
 
-    <reference id="sampleRepository" interface="org.opennms.newts.api.SampleRepository" />
-
-    <reference id="searcher" interface="org.opennms.newts.api.search.Searcher" />
-
-	<bean id="newtsCorrelatorImpl" class="org.opennms.correlator.newts.NewtsMetricCorrelator">
-		<property name="sampleRepository" ref="sampleRepository" />
+	<bean id="sparkMetricCorrelatorImpl" class="org.opennms.correlator.spark.SparkMetricCorrelator">
+		<!--  <property name="sampleRepository" ref="sampleRepository" /> -->
 	</bean>
 
-	<service id="newtsCorrelator" ref="newtsCorrelatorImpl" interface="org.opennms.correlator.api.MetricCorrelator" />
+	<service id="sparkMetricCorrelator" ref="sparkMetricCorrelatorImpl" interface="org.opennms.correlator.api.MetricCorrelator" />
 
-	<bean id="newtsMetricProviderImpl" class="org.opennms.correlator.newts.NewtsMetricProvider">
-		<property name="searcher" ref="searcher" />
+	<bean id="sparkMetricProviderImpl" class="org.opennms.correlator.spark.SparkMetricProvider">
+		<!-- <property name="searcher" ref="searcher" /> -->
 	</bean>
 
-	<service id="newtsMetricProvider" ref="newtsMetricProviderImpl" interface="org.opennms.correlator.api.MetricProvider" />
+	<service id="sparkMetricProvider" ref="sparkMetricProviderImpl" interface="org.opennms.correlator.api.MetricProvider" />
 
 </blueprint>

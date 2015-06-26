@@ -1,4 +1,4 @@
-package org.opennms.correlator.spark;
+package org.opennms.correlator.spark.impl;
 
 import javax.inject.Inject;
 import javax.inject.Named;

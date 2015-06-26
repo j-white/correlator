@@ -40,6 +40,7 @@ Setting up your container:
     feature:install cxf-commands
     
     feature:repo-add mvn:org.opennms.correlator/correlator-karaf/1.0.0-SNAPSHOT/xml/features
+    feature:install correlator-newts
     feature:install correlator-rest
     
     feature:install war

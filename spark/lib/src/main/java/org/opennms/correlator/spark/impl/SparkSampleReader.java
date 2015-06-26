@@ -56,7 +56,6 @@ public class SparkSampleReader {
     }
 
     public JavaRDD<Row<Sample>> select(Resource resource, Optional<Timestamp> start, Optional<Timestamp> end) {
-
         Timestamp upper = end.isPresent() ? end.get() : Timestamp.now();
         Timestamp lower = start.isPresent() ? start.get() : upper.minus(Duration.seconds(86400));
 

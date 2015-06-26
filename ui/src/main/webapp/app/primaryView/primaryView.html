@@ -1,0 +1,41 @@
+<form class="form-inline">
+    <div class="form-group">
+        <label for="resourceId">Resource ID</label>
+        <input type="text" class="form-control" id="resourceId" ng-model="resource.id" placeholder="i.e. node[1].nodeSnmp[]">
+    </div>
+    <div class="form-group">
+        <label for="resourceAttribute">Attribute</label>
+        <input type="text" class="form-control" id="resourceAttribute" ng-model="resource.attribute" placeholder="i.e. cpuUser">
+    </div>
+    <div class="form-group">
+        <button type="submit" ng-click="graph([resource])" class="btn-sm btn-primary">Graph</button>
+        <button type="submit" ng-click="correlate(resource)" class="btn-sm btn-success">Correlate</button>
+    </div>
+</form>
+
+<div class="row">
+    <hr class="spacer-10"/>
+    <div class="col-md-12">
+        <div id="primaryGraph"></div>
+    </div>
+</div>
+
+<div class="row">
+    <hr class="spacer-10"/>
+    <div class="col-md-12">
+        <div id="correlatedResources">
+            <table class="table table-condensed table-striped table-hover">
+                <tr>
+                    <th>ID</th>
+                    <th>Attribute</th>
+                    <th>Coefficient</th>
+                </tr>
+                <tr ng-click="graphRelated(resource)" ng-repeat="resource in correlatedResources" data-test="{{r.id}}">
+                    <td>{{ resource.id }}</td>
+                    <td>{{ resource.attribute }}</td>
+                    <td>{{ resource.coefficient }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

@@ -39,9 +39,9 @@ import org.opennms.newts.api.ValueType;
 
 import com.google.common.collect.Lists;
 
-class Utils {
+public class Utils {
     
-    static abstract class AbstractRDDRowsBuilder<T extends Element<?>> {
+    public static abstract class AbstractRDDRowsBuilder<T extends Element<?>> {
 
         private final List<Row<T>> m_results = Lists.newArrayList();
         private final JavaSparkContext m_context;
@@ -49,12 +49,12 @@ class Utils {
 
         private Row<T> m_current;
 
-        AbstractRDDRowsBuilder(JavaSparkContext context, Resource resource) {
+        public AbstractRDDRowsBuilder(JavaSparkContext context, Resource resource) {
             m_context = checkNotNull(context, "context argument");
             m_resource = checkNotNull(resource, "resource argument");
         }
 
-        AbstractRDDRowsBuilder<T> row(Timestamp timestamp) {
+        public AbstractRDDRowsBuilder<T> row(Timestamp timestamp) {
             if (m_current != null && (!timestamp.gt(m_current.getTimestamp()))) {
                 throw new IllegalArgumentException("rows must be added in sort order");
             }
@@ -63,70 +63,70 @@ class Utils {
             return this;
         }
 
-        AbstractRDDRowsBuilder<T> row(int epochSeconds) {
+        public AbstractRDDRowsBuilder<T> row(int epochSeconds) {
             return row(Timestamp.fromEpochSeconds(epochSeconds));
         }
 
-        protected Resource getResource() {
+        public Resource getResource() {
             return m_resource;
         }
 
-        protected Timestamp getCurrentTimestamp() {
+        public Timestamp getCurrentTimestamp() {
             return m_current.getTimestamp();
         }
 
-        protected void addElement(T element) {
+        public void addElement(T element) {
             m_current.addElement(element);
         }
 
-        abstract AbstractRDDRowsBuilder<T> element(String name, double value);
-        abstract AbstractRDDRowsBuilder<T> element(String name, double value, Map<String, String> attrs);
+        public abstract AbstractRDDRowsBuilder<T> element(String name, double value);
+        public abstract AbstractRDDRowsBuilder<T> element(String name, double value, Map<String, String> attrs);
 
-        JavaRDD<Row<T>> build() {
+        public JavaRDD<Row<T>> build() {
             return m_context.parallelize(m_results, m_results.size());
         }
 
     }
 
 
-    static class MeasurementRDDRowsBuilder extends AbstractRDDRowsBuilder<Measurement> {
+    public static class MeasurementRDDRowsBuilder extends AbstractRDDRowsBuilder<Measurement> {
 
-        MeasurementRDDRowsBuilder(JavaSparkContext context, Resource resource) {
+        public MeasurementRDDRowsBuilder(JavaSparkContext context, Resource resource) {
             super(context, resource);
         }
 
         @Override
-        MeasurementRDDRowsBuilder element(String name, double value) {
+        public MeasurementRDDRowsBuilder element(String name, double value) {
             addElement(new Measurement(getCurrentTimestamp(), getResource(), name, value));
             return this;
         }
 
         @Override
-        AbstractRDDRowsBuilder<Measurement> element(String name, double value, Map<String, String> attrs) {
+        public AbstractRDDRowsBuilder<Measurement> element(String name, double value, Map<String, String> attrs) {
             addElement(new Measurement(getCurrentTimestamp(), getResource(), name, value, attrs));
             return this;
         }
 
     }
 
-    static class SampleRDDRowsBuilder extends AbstractRDDRowsBuilder<Sample> {
+    public static class SampleRDDRowsBuilder extends AbstractRDDRowsBuilder<Sample> {
 
         private final MetricType m_type;
 
-        SampleRDDRowsBuilder(JavaSparkContext context, Resource resource, MetricType type) {
+        public SampleRDDRowsBuilder(JavaSparkContext context, Resource resource, MetricType type) {
             super(context, resource);
 
             m_type = checkNotNull(type, "type argument");
         }
 
         @Override
-        SampleRDDRowsBuilder element(String name, double value) {
+        public SampleRDDRowsBuilder element(String name, double value) {
             addElement(new Sample(getCurrentTimestamp(), getResource(), name, m_type, ValueType.compose(value, m_type)));
             return this;
         }
 
         @Override
-        AbstractRDDRowsBuilder<Sample> element(String name, double value, Map<String, String> attrs) {
+        public AbstractRDDRowsBuilder<Sample> element(String name, double value, Map<String, String> attrs) {
             addElement(new Sample(getCurrentTimestamp(), getResource(), name, m_type, ValueType.compose(value, m_type), attrs));
             return this;
         }
@@ -141,7 +141,7 @@ class Utils {
      * @param actualRows
      *            actual value
      */
-    static void assertRDDRowsEqual(JavaRDD<Row<Measurement>> expectedRDDRows, JavaRDD<Row<Measurement>> actualRDDRows) {
+    static public void assertRDDRowsEqual(JavaRDD<Row<Measurement>> expectedRDDRows, JavaRDD<Row<Measurement>> actualRDDRows) {
 
         Iterator<Row<Measurement>> expectedRows = expectedRDDRows.collect().iterator();
         Iterator<Row<Measurement>> actualRows = actualRDDRows.collect().iterator();
@@ -176,7 +176,7 @@ class Utils {
      * @param actual
      *            actual value
      */
-    static void assertSamplesEqual(Measurement expected, Measurement actual) {
+    public static void assertSamplesEqual(Measurement expected, Measurement actual) {
         checkNotNull(expected, "expected");
         checkNotNull(actual, "actual");
         assertEquals("Unexpected measurement name", expected.getName(), actual.getName());

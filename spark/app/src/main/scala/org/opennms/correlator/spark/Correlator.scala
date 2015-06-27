@@ -19,6 +19,7 @@ object Correlator extends SparkJob {
   }
 
   override def validate(sc: SparkContext, config: Config): SparkJobValidation = {
+    // Quick verification
     Try(config.getString("metric.resource"))
       .map(x => SparkJobValid)
       .getOrElse(SparkJobInvalid("No metric.resource config param"))

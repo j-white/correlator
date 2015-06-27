@@ -1,14 +1,13 @@
-package org.opennms.correlator.spark;
+package org.opennms.correlator.spark.aggregate;
 
 import static org.opennms.correlator.spark.Utils.assertRDDRowsEqual;
 import static org.opennms.newts.api.query.StandardAggregationFunctions.AVERAGE;
-
-import java.io.File;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opennms.correlator.spark.Utils.SampleRDDRowsBuilder;
 import org.opennms.correlator.spark.Utils.MeasurementRDDRowsBuilder;
@@ -23,39 +22,14 @@ import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.Results.Row;
 import org.opennms.newts.api.query.ResultDescriptor;
 
+@Ignore
 public class SparkResultProcessorTest {
-
-    private static final String APP_NAME = "Correlator";
-
-    private static final String TARGET_JAR = new File("target/correlator-1.0.0-SNAPSHOT.jar").getAbsolutePath();
 
     private static JavaSparkContext context;
 
     @BeforeClass
     public static void setUpClass() {
-        String sparkMasterUrl = "local";
-        /*String hostname;
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
-        }
-        sparkMasterUrl = "spark://" + hostname + ":7077";*/
-
-        SparkConf conf = new SparkConf().setAppName(APP_NAME)
-                .setMaster(sparkMasterUrl)
-                .set("spark.cassandra.connection.host", "localhost")
-                .set("spark.cassandra.connection.port", "9142")
-                .setJars(new String[] {
-                        TARGET_JAR,
-                        "/home/jesse/.m2/repository/com/datastax/spark/spark-cassandra-connector_2.10/1.4.0-M1/spark-cassandra-connector_2.10-1.4.0-M1.jar",
-                        "/home/jesse/.m2/repository/com/datastax/spark/spark-cassandra-connector-java_2.10/1.4.0-M1/spark-cassandra-connector-java_2.10-1.4.0-M1.jar",
-                        "/home/jesse/.m2/repository/com/datastax/cassandra/cassandra-driver-core/2.1.5/cassandra-driver-core-2.1.5.jar",
-                        "/home/jesse/.m2/repository/com/google/guava/guava/18.0/guava-18.0.jar",
-                        "/home/jesse/.m2/repository/joda-time/joda-time/2.3/joda-time-2.3.jar",
-                        "/home/jesse/.m2/repository/org/opennms/newts/newts-api/1.2.1-SNAPSHOT/newts-api-1.2.1-SNAPSHOT.jar"
-                });
-
+        SparkConf conf = new SparkConf().setAppName("test").setMaster("local");
         context = new JavaSparkContext(conf);
     }
 

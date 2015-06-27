@@ -97,6 +97,4 @@
 		class="org.opennms.newts.persistence.cassandra.CassandraSampleRepository"
 		depends-on="samples.cassandra.time-to-live" />
 
-	<bean id="metricCorelator" class="org.opennms.correlator.newts.NewtsMetricCorrelator" />
-
 </beans>

@@ -6,6 +6,10 @@ Prototype used to perform correlation on time series stored in [Newts](http://ne
 
 The goal is to be able to perform sample selection and aggregation using the Cassandra connector and Spark's RDDs.
 
+## Cassandra Setup
+
+Using Cassandra 2.1.7
+
 ## Setting up Spark
 
 Download and build:

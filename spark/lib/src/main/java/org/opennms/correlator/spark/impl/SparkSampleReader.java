@@ -80,8 +80,12 @@ public class SparkSampleReader {
             throw new IllegalArgumentException(String.format("No partitions found between: %s and %s", lowerShard, upperShard));
         }
 
+        LOG.debug("Found {} rows for {} from {} to {}",  rows.count(), resource, start, end);
+
         // Group the rows by timestamp
+        LOG.debug("Grouping rows by timestamp.");
         JavaPairRDD<Timestamp, Iterable<CassandraRow>> rowsKeyedByTimestamp = rows.groupBy(new MapRowToTimestamp());
+        LOG.debug("Done grouping rows by timestamp.");
 
         // Sort the timestamps in ascending order
         rowsKeyedByTimestamp = rowsKeyedByTimestamp.sortByKey();

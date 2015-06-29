@@ -24,6 +24,8 @@ import org.opennms.newts.api.Timestamp;
 import org.opennms.newts.api.Results.Row;
 import org.opennms.newts.api.query.ResultDescriptor;
 import org.opennms.newts.api.query.StandardAggregationFunctions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.spark.mllib.stat.Statistics;
 
 import com.google.common.base.Optional;
@@ -32,6 +34,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class SparkCorrelator implements MetricCorrelator {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SparkCorrelator.class);
 
     private static final String CORRELATION_TYPE = "pearson";
 
@@ -60,6 +64,7 @@ public class SparkCorrelator implements MetricCorrelator {
                 metrics.add(m.getMetric());
             }
         }
+        LOG.debug("Metrics by resource: {}", metricsByResource);
 
         // Build the RDDs containing the measurements for all of the required metrics
         // Group these by resource id
@@ -103,6 +108,6 @@ public class SparkCorrelator implements MetricCorrelator {
 
         // Select the Top N metrics
         Collections.sort(metricsWithCoeffs);
-        return metricsWithCoeffs.subList(0, topN);
+        return metricsWithCoeffs.subList(0, Math.min(metricsWithCoeffs.size(), topN));
     }
 }
